@@ -3,746 +3,1196 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MeasureMe — Bespoke Trouser Measurement</title>
+<title>MeasureMe v2 — AI Body Measurement</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
 <style>
 :root {
-  --ink:      #1a1714;
-  --paper:    #f5f1eb;
-  --gold:     #b8902a;
-  --gold-lt:  #d4aa4a;
-  --muted:    #6b6458;
-  --rule:     #d8d0c4;
-  --danger:   #8b2020;
-  --success:  #2a5c3a;
-  --cam-w:    min(340px, 90vw);
+  --ink:     #1a1714;
+  --paper:   #f5f1eb;
+  --gold:    #b8902a;
+  --gold-lt: #d4aa4a;
+  --muted:   #6b6458;
+  --rule:    #d8d0c4;
+  --danger:  #8b2020;
+  --success: #2a5c3a;
+  --info:    #1d3a6b;
+  --cam-w:   min(320px, 88vw);
 }
-*, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
-html { font-size:16px; scroll-behavior:smooth; }
+*,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+html { font-size:16px; }
 body {
-  background: var(--paper);
-  color: var(--ink);
-  font-family: 'DM Mono', monospace;
-  min-height: 100dvh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  background:var(--paper);
+  color:var(--ink);
+  font-family:'DM Mono',monospace;
+  min-height:100dvh;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
 }
 
-/* ── header ── */
+/* ── header ─────────────────────────────────────────────────────── */
 .site-header {
-  width: 100%;
-  border-bottom: 1px solid var(--rule);
-  padding: 1.25rem 2rem;
-  display: flex;
-  align-items: baseline;
-  gap: 1rem;
+  width:100%;
+  border-bottom:1px solid var(--rule);
+  padding:1.1rem 1.5rem;
+  display:flex;
+  align-items:baseline;
+  gap:.9rem;
 }
 .logo {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 1.6rem;
-  font-weight: 300;
-  letter-spacing: .04em;
-  color: var(--ink);
+  font-family:'Cormorant Garamond',serif;
+  font-size:1.5rem;
+  font-weight:300;
+  letter-spacing:.04em;
 }
-.logo span { color: var(--gold); font-style: italic; }
+.logo em { color:var(--gold); font-style:italic; }
+.logo-badge {
+  font-size:.58rem;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  color:var(--paper);
+  background:var(--gold);
+  padding:2px 7px;
+  border-radius:2px;
+  vertical-align:middle;
+}
 .logo-sub {
-  font-size: 0.65rem;
-  color: var(--muted);
-  letter-spacing: .12em;
-  text-transform: uppercase;
+  font-size:.62rem;
+  color:var(--muted);
+  letter-spacing:.1em;
+  text-transform:uppercase;
 }
 
-/* ── screens ── */
-.screen { display:none; width:100%; max-width:520px; padding:2rem 1.5rem 4rem; }
+/* ── screens ─────────────────────────────────────────────────────── */
+.screen { display:none; width:100%; max-width:500px; padding:1.75rem 1.4rem 3.5rem; }
 .screen.active { display:block; }
 
-/* ── progress ── */
-.progress {
-  display: flex;
-  gap: 6px;
-  margin-bottom: 2rem;
-}
-.prog-bar {
-  flex: 1;
-  height: 2px;
-  background: var(--rule);
-  transition: background .4s;
-}
-.prog-bar.active  { background: var(--gold); }
-.prog-bar.done    { background: var(--success); }
+/* ── progress dots ───────────────────────────────────────────────── */
+.progress { display:flex; gap:5px; margin-bottom:1.75rem; }
+.prog-bar { flex:1; height:2px; background:var(--rule); transition:background .4s; border-radius:1px; }
+.prog-bar.on   { background:var(--gold); }
+.prog-bar.done { background:var(--success); }
 
-/* ── type ── */
-.screen-label {
-  font-size: 0.65rem;
-  letter-spacing: .14em;
-  text-transform: uppercase;
-  color: var(--gold);
-  margin-bottom: .5rem;
+/* ── type ────────────────────────────────────────────────────────── */
+.label {
+  font-size:.6rem;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color:var(--gold);
+  margin-bottom:.45rem;
 }
-.screen-title {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 2rem;
-  font-weight: 300;
-  line-height: 1.2;
-  margin-bottom: .75rem;
+.title {
+  font-family:'Cormorant Garamond',serif;
+  font-size:1.9rem;
+  font-weight:300;
+  line-height:1.2;
+  margin-bottom:.65rem;
 }
-.screen-body {
-  font-size: .82rem;
-  color: var(--muted);
-  line-height: 1.8;
-  margin-bottom: 1.75rem;
+.body-text {
+  font-size:.8rem;
+  color:var(--muted);
+  line-height:1.85;
+  margin-bottom:1.5rem;
 }
+hr.rule { border:none; border-top:1px solid var(--rule); margin:1.25rem 0; }
 
-/* ── rule divider ── */
-.rule {
-  border: none;
-  border-top: 1px solid var(--rule);
-  margin: 1.5rem 0;
-}
-
-/* ── instructions list ── */
-.inst-list { list-style: none; margin-bottom: 1.75rem; }
+/* ── instructions ────────────────────────────────────────────────── */
+.inst-list { list-style:none; margin-bottom:1.6rem; }
 .inst-list li {
-  display: flex;
-  gap: .85rem;
-  padding: .75rem 0;
-  border-bottom: 1px solid var(--rule);
-  font-size: .82rem;
-  line-height: 1.6;
-  color: var(--ink);
+  display:flex;
+  gap:.8rem;
+  padding:.65rem 0;
+  border-bottom:1px solid var(--rule);
+  font-size:.79rem;
+  line-height:1.6;
 }
-.inst-list li:last-child { border-bottom: none; }
-.inst-num {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 1.1rem;
-  color: var(--gold);
-  min-width: 1.4rem;
-  font-weight: 300;
-  line-height: 1.4;
+.inst-list li:last-child { border-bottom:none; }
+.inst-n {
+  font-family:'Cormorant Garamond',serif;
+  font-size:1rem;
+  color:var(--gold);
+  min-width:1.2rem;
+  font-weight:300;
+  flex-shrink:0;
+  line-height:1.5;
 }
 
-/* ── form ── */
-.field { margin-bottom: 1.25rem; }
+/* ── model load indicator ────────────────────────────────────────── */
+.model-row {
+  display:flex;
+  align-items:center;
+  gap:.75rem;
+  padding:.6rem 0;
+  border-bottom:1px solid var(--rule);
+  font-size:.78rem;
+}
+.model-row:last-child { border-bottom:none; }
+.model-icon { font-size:.9rem; width:1.2rem; text-align:center; flex-shrink:0; }
+.model-name { flex:1; color:var(--ink); }
+.model-status { font-size:.68rem; color:var(--muted); white-space:nowrap; }
+.model-status.ok    { color:var(--success); }
+.model-status.err   { color:var(--danger); }
+.model-status.spin  { color:var(--gold); }
+.model-bar-wrap { width:100%; height:2px; background:var(--rule); border-radius:1px; margin-top:4px; display:none; }
+.model-bar { height:100%; background:var(--gold); border-radius:1px; width:0; transition:width .3s; }
+
+/* ── form ────────────────────────────────────────────────────────── */
+.field { margin-bottom:1.1rem; }
 .field label {
-  display: block;
-  font-size: .65rem;
-  letter-spacing: .1em;
-  text-transform: uppercase;
-  color: var(--muted);
-  margin-bottom: .4rem;
+  display:block;
+  font-size:.6rem;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  color:var(--muted);
+  margin-bottom:.35rem;
 }
 .field input {
-  width: 100%;
-  border: 1px solid var(--rule);
-  background: transparent;
-  padding: .65rem .85rem;
-  font-family: 'DM Mono', monospace;
-  font-size: .9rem;
-  color: var(--ink);
-  border-radius: 2px;
-  outline: none;
-  transition: border-color .2s;
+  width:100%;
+  border:1px solid var(--rule);
+  background:transparent;
+  padding:.6rem .8rem;
+  font-family:'DM Mono',monospace;
+  font-size:.88rem;
+  color:var(--ink);
+  border-radius:2px;
+  outline:none;
+  transition:border-color .2s;
 }
-.field input:focus { border-color: var(--gold); }
+.field input:focus { border-color:var(--gold); }
 
-/* ── button ── */
+/* ── buttons ─────────────────────────────────────────────────────── */
 .btn {
-  display: inline-flex;
-  align-items: center;
-  gap: .5rem;
-  border: 1px solid var(--ink);
-  background: var(--ink);
-  color: var(--paper);
-  font-family: 'DM Mono', monospace;
-  font-size: .78rem;
-  letter-spacing: .08em;
-  text-transform: uppercase;
-  padding: .75rem 1.6rem;
-  cursor: pointer;
-  border-radius: 2px;
-  transition: background .18s, color .18s;
-  width: 100%;
-  justify-content: center;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:.5rem;
+  border:1px solid var(--ink);
+  background:var(--ink);
+  color:var(--paper);
+  font-family:'DM Mono',monospace;
+  font-size:.76rem;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  padding:.72rem 1.5rem;
+  cursor:pointer;
+  border-radius:2px;
+  width:100%;
+  transition:background .18s, color .18s, border-color .18s;
 }
-.btn:hover  { background: var(--gold); border-color: var(--gold); }
-.btn:active { opacity: .85; }
-.btn.ghost  {
-  background: transparent;
-  color: var(--ink);
-  border-color: var(--rule);
-  margin-top: .75rem;
+.btn:hover  { background:var(--gold); border-color:var(--gold); }
+.btn:active { opacity:.85; }
+.btn:disabled { opacity:.38; cursor:not-allowed; }
+.btn.ghost {
+  background:transparent;
+  color:var(--ink);
+  border-color:var(--rule);
+  margin-top:.65rem;
 }
-.btn.ghost:hover { border-color: var(--ink); background: transparent; }
-.btn:disabled { opacity:.4; cursor:not-allowed; }
+.btn.ghost:hover { border-color:var(--ink); background:transparent; }
 
-/* ── camera ── */
+/* ── camera ──────────────────────────────────────────────────────── */
 .cam-wrap {
-  width: var(--cam-w);
-  aspect-ratio: 3/4;
-  margin: 0 auto 1.25rem;
-  position: relative;
-  border-radius: 2px;
-  overflow: hidden;
-  background: #111;
-  border: 1px solid var(--rule);
+  width:var(--cam-w);
+  aspect-ratio:3/4;
+  margin:0 auto 1.1rem;
+  position:relative;
+  border-radius:2px;
+  overflow:hidden;
+  background:#0d0d0d;
+  border:1px solid var(--rule);
 }
 .cam-wrap video,
 .cam-wrap canvas { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
 .cam-wrap canvas { z-index:2; }
-
-.hud {
-  position: absolute;
-  bottom: 12px;
-  left: 50%;
-  transform: translateX(-50%);
-  white-space: nowrap;
-  background: rgba(10,8,6,.7);
-  color: #e8dfc8;
-  border-radius: 100px;
-  padding: 5px 14px;
-  font-family: 'DM Mono', monospace;
-  font-size: .68rem;
-  letter-spacing: .06em;
-  z-index: 6;
-  backdrop-filter: blur(4px);
-  transition: background .3s;
-}
-.hud.ok   { background: rgba(42,92,58,.85); }
-.hud.warn { background: rgba(139,32,32,.8); }
-
-.countdown {
-  position: absolute;
-  inset: 0;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0,0,0,.4);
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 6rem;
-  font-weight: 300;
-  color: #fff;
-  z-index: 10;
-}
-
-/* skeleton guides */
 .guide-frame {
-  position: absolute;
-  inset: 8px;
-  border: 1px dashed rgba(184,144,42,.4);
-  border-radius: 2px;
-  z-index: 1;
-  pointer-events: none;
+  position:absolute;
+  inset:10px;
+  border:1px dashed rgba(184,144,42,.3);
+  border-radius:2px;
+  z-index:1;
+  pointer-events:none;
 }
-.guide-label {
-  position: absolute;
-  top: 14px;
-  right: 14px;
-  font-size: .6rem;
-  letter-spacing: .1em;
-  text-transform: uppercase;
-  color: rgba(184,144,42,.8);
-  z-index: 3;
+.view-tag {
+  position:absolute;
+  top:12px;
+  right:12px;
+  font-size:.58rem;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  color:rgba(184,144,42,.85);
+  z-index:5;
+  font-family:'DM Mono',monospace;
+}
+.hud {
+  position:absolute;
+  bottom:12px;
+  left:50%;
+  transform:translateX(-50%);
+  white-space:nowrap;
+  background:rgba(10,8,6,.72);
+  color:#e8dfc8;
+  border-radius:100px;
+  padding:5px 14px;
+  font-size:.66rem;
+  letter-spacing:.06em;
+  z-index:6;
+  backdrop-filter:blur(6px);
+  transition:background .3s;
+  font-family:'DM Mono',monospace;
+}
+.hud.ok   { background:rgba(42,92,58,.88); }
+.hud.warn { background:rgba(139,32,32,.82); }
+.cd-overlay {
+  position:absolute;
+  inset:0;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  background:rgba(0,0,0,.38);
+  font-family:'Cormorant Garamond',serif;
+  font-size:5.5rem;
+  font-weight:300;
+  color:#fff;
+  z-index:10;
 }
 
-/* shutter */
-.shutter-ring {
-  width: 64px; height: 64px;
-  border-radius: 50%;
-  border: 2px solid var(--ink);
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer;
-  margin: 0 auto .75rem;
-  transition: border-color .2s;
-  background: transparent;
+/* ── shutter ─────────────────────────────────────────────────────── */
+.shutter-wrap { display:flex; justify-content:center; margin-bottom:.75rem; }
+.shutter {
+  width:60px; height:60px;
+  border-radius:50%;
+  border:2px solid var(--ink);
+  background:transparent;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  transition:border-color .2s;
 }
-.shutter-ring:hover { border-color: var(--gold); }
-.shutter-ring:active .shutter-dot { transform: scale(.85); }
-.shutter-ring:disabled { opacity:.4; cursor:not-allowed; }
+.shutter:hover { border-color:var(--gold); }
+.shutter:hover .shutter-dot { background:var(--gold); }
+.shutter:disabled { opacity:.35; cursor:not-allowed; }
 .shutter-dot {
-  width: 44px; height: 44px;
-  border-radius: 50%;
-  background: var(--ink);
-  transition: transform .12s, background .2s;
-  pointer-events: none;
+  width:42px; height:42px;
+  border-radius:50%;
+  background:var(--ink);
+  transition:background .2s, transform .12s;
 }
-.shutter-ring:hover .shutter-dot { background: var(--gold); }
+.shutter:active .shutter-dot { transform:scale(.86); }
 
-/* ── loading ── */
+/* ── processing screen ───────────────────────────────────────────── */
+.proc-canvas-wrap {
+  width:var(--cam-w);
+  aspect-ratio:3/4;
+  margin:0 auto 1rem;
+  border-radius:2px;
+  overflow:hidden;
+  background:#111;
+  border:1px solid var(--rule);
+  position:relative;
+}
+.proc-canvas-wrap canvas { width:100%; height:100%; object-fit:cover; }
+.proc-badge {
+  position:absolute;
+  bottom:12px;
+  left:50%;
+  transform:translateX(-50%);
+  background:rgba(10,8,6,.72);
+  color:#e8dfc8;
+  border-radius:100px;
+  padding:5px 14px;
+  font-size:.64rem;
+  letter-spacing:.06em;
+  white-space:nowrap;
+  backdrop-filter:blur(4px);
+  font-family:'DM Mono',monospace;
+}
+
+/* ── spinner ─────────────────────────────────────────────────────── */
 .spinner {
-  width: 36px; height: 36px;
-  border: 2px solid var(--rule);
-  border-top-color: var(--gold);
-  border-radius: 50%;
-  animation: spin .8s linear infinite;
-  margin: 2rem auto 1rem;
+  width:28px; height:28px;
+  border:2px solid var(--rule);
+  border-top-color:var(--gold);
+  border-radius:50%;
+  animation:spin .75s linear infinite;
+  display:inline-block;
+  vertical-align:middle;
+  margin-right:.5rem;
 }
 @keyframes spin { to { transform:rotate(360deg); } }
-.load-title {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 1.5rem;
-  font-weight: 300;
-  text-align: center;
-  margin-bottom: .5rem;
-}
-.load-sub { font-size:.78rem; color:var(--muted); text-align:center; line-height:1.7; }
-.load-err { font-size:.78rem; color:var(--danger); text-align:center; margin-top:.75rem; line-height:1.6; }
 
-/* ── results ── */
+/* ── results ─────────────────────────────────────────────────────── */
 .section-hd {
-  font-size: .6rem;
-  letter-spacing: .14em;
-  text-transform: uppercase;
-  color: var(--gold);
-  padding: .6rem 0 .4rem;
-  border-bottom: 1px solid var(--rule);
-  margin-bottom: 0;
+  font-size:.58rem;
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  color:var(--gold);
+  padding:.55rem 0 .35rem;
+  border-bottom:1px solid var(--rule);
 }
 .m-row {
-  display: grid;
-  grid-template-columns: 1.6rem 1fr auto auto;
-  gap: .5rem;
-  align-items: center;
-  padding: .65rem 0;
-  border-bottom: 1px solid var(--rule);
-  font-size: .78rem;
+  display:grid;
+  grid-template-columns:1.4rem 1fr auto auto;
+  gap:.4rem;
+  align-items:center;
+  padding:.6rem 0;
+  border-bottom:1px solid var(--rule);
+  font-size:.77rem;
 }
-.m-row:last-child { border-bottom: none; }
-.m-num { color: var(--muted); font-size: .65rem; }
-.m-name { color: var(--ink); }
-.m-name small { display:block; color:var(--muted); font-size:.65rem; margin-top:1px; }
-.m-val { font-size: 1rem; font-family:'Cormorant Garamond',serif; font-weight:400; color:var(--ink); text-align:right; white-space:nowrap; }
-.m-val span { font-size: .65rem; color: var(--muted); }
-.m-badge {
-  font-size: .6rem;
-  padding: 2px 7px;
-  border-radius: 100px;
-  text-align: center;
-  white-space: nowrap;
+.m-row:last-child { border-bottom:none; }
+.m-num { color:var(--muted); font-size:.62rem; }
+.m-name small { display:block; font-size:.63rem; color:var(--muted); margin-top:1px; }
+.m-val {
+  font-family:'Cormorant Garamond',serif;
+  font-size:1.05rem;
+  font-weight:400;
+  text-align:right;
+  white-space:nowrap;
 }
-.badge-meas { background:#e8f0e8; color:#2a5c3a; }
-.badge-est  { background:#f5ede0; color:#7a5520; }
-.badge-fix  { background:#e8e4dc; color:#4a4030; }
+.m-val span { font-size:.63rem; color:var(--muted); }
+.badge {
+  font-size:.58rem;
+  padding:2px 7px;
+  border-radius:100px;
+  white-space:nowrap;
+}
+.b-meas  { background:#e8f0e8; color:#2a5c3a; }
+.b-depth { background:#e8ecf5; color:#1d3a6b; }
+.b-est   { background:#f5ede0; color:#7a5520; }
+.b-fix   { background:#edeae4; color:#4a4030; }
+
+.legend {
+  display:flex;
+  flex-wrap:wrap;
+  gap:.65rem;
+  margin:.65rem 0 1.25rem;
+}
+.legend-item {
+  display:flex;
+  align-items:center;
+  gap:.35rem;
+  font-size:.66rem;
+  color:var(--muted);
+}
 
 .disclaimer {
-  border: 1px solid var(--rule);
-  padding: 1rem 1.1rem;
-  margin-top: 1.25rem;
-  font-size: .72rem;
-  line-height: 1.8;
-  color: var(--muted);
+  border:1px solid var(--rule);
+  padding:.9rem 1rem;
+  font-size:.71rem;
+  line-height:1.8;
+  color:var(--muted);
+  margin-top:1.1rem;
 }
-.disclaimer strong { color: var(--ink); font-weight: 400; }
+.disclaimer strong { color:var(--ink); font-weight:400; }
 
-.legend { display:flex; gap:1rem; flex-wrap:wrap; margin:.75rem 0 1.25rem; }
-.legend-item { display:flex; align-items:center; gap:.4rem; font-size:.68rem; color:var(--muted); }
-
-/* ── privacy note ── */
 .privacy {
-  font-size: .68rem;
-  color: var(--muted);
-  text-align: center;
-  line-height: 1.7;
-  margin-top: 1rem;
-  padding: 0 .5rem;
+  font-size:.65rem;
+  color:var(--muted);
+  text-align:center;
+  line-height:1.7;
+  margin-top:.85rem;
+  padding:0 .3rem;
 }
-.privacy strong { color: var(--ink); font-weight: 400; }
+.privacy strong { color:var(--ink); font-weight:400; }
+
+/* depth confidence bar */
+.depth-conf {
+  width:100%;
+  height:3px;
+  background:var(--rule);
+  border-radius:2px;
+  margin-top:.3rem;
+  overflow:hidden;
+}
+.depth-conf-fill {
+  height:100%;
+  border-radius:2px;
+  transition:width .6s ease;
+}
 </style>
 </head>
 <body>
 
 <header class="site-header">
-  <div class="logo">Measure<span>Me</span></div>
-  <div class="logo-sub">Bespoke trouser measurements</div>
+  <div>
+    <span class="logo">Measure<em>Me</em></span>
+    <span class="logo-badge">v2</span>
+  </div>
+  <div class="logo-sub">Dual-AI bespoke measurement</div>
 </header>
 
-<!-- ── SCREEN: SETUP ── -->
+<!-- ══ SCREEN 1: SETUP ══════════════════════════════════════════════ -->
 <section class="screen active" id="sc-setup">
-  <div class="screen-label">Welcome</div>
-  <h1 class="screen-title">Your bespoke<br>measurement session</h1>
-  <p class="screen-body">
-    Stand in front of any camera. The AI detects your body landmarks and
-    derives all 14 measurements from your tailor brief. No data leaves your device.
+  <div class="label">Welcome</div>
+  <h1 class="title">Your bespoke<br>measurement session</h1>
+  <p class="body-text">
+    v2 uses two AI models: <strong>BlazePose</strong> for body landmarks
+    and <strong>Depth Anything V2</strong> for per-pixel depth. Together
+    they measure body thickness directly — no side view needed.
   </p>
 
   <ul class="inst-list">
-    <li><span class="inst-num">1</span><span>Wear only <strong>briefs, socks and shoes.</strong> Clothing adds bulk and skews measurements.</span></li>
-    <li><span class="inst-num">2</span><span>Prop your device <strong>2–3 metres away at hip height</strong> — a ledge, tripod, or stack of books works well.</span></li>
-    <li><span class="inst-num">3</span><span>Stand in front of a <strong>plain wall</strong> with good even lighting. Avoid backlighting.</span></li>
-    <li><span class="inst-num">4</span><span>Keep <strong>arms slightly away</strong> from your sides. Stand naturally erect.</span></li>
-    <li><span class="inst-num">5</span><span>You will capture <strong>two poses</strong>: front view, then right-side view.</span></li>
+    <li><span class="inst-n">1</span><span>Wear only <strong>briefs, socks and shoes</strong> — clothing adds bulk</span></li>
+    <li><span class="inst-n">2</span><span>Prop device <strong>2–3 m away at hip height</strong> — one front pose only</span></li>
+    <li><span class="inst-n">3</span><span>Stand against a <strong>plain, evenly-lit wall</strong> — avoid mirrors and glass</span></li>
+    <li><span class="inst-n">4</span><span>Arms <strong>slightly away</strong> from sides, natural upright stance</span></li>
+    <li><span class="inst-n">5</span><span>After capture, depth AI runs for <strong>5–15 seconds</strong> — stay on the page</span></li>
   </ul>
 
   <div class="field">
-    <label>Your height in centimetres — required for scale</label>
+    <label>Your height in centimetres — required for scale calibration</label>
     <input type="number" id="ht-in" value="175" min="140" max="220">
   </div>
   <div class="field">
     <label>Name or reference (optional)</label>
-    <input type="text" id="nm-in" placeholder="e.g. John — appears on your results sheet">
+    <input type="text" id="nm-in" placeholder="e.g. John">
   </div>
 
-  <button class="btn" onclick="startApp()">Begin session &rarr;</button>
+  <button class="btn" id="start-btn" onclick="startApp()">Begin session &rarr;</button>
   <p class="privacy">
-    <strong>Privacy:</strong> All AI processing runs entirely on this device using Google MediaPipe BlazePose.
-    No images, landmarks, or measurements are transmitted anywhere.
+    <strong>Privacy:</strong> both AI models run entirely on this device via WebGPU or WebAssembly.
+    No images, landmarks, or depth maps are transmitted anywhere.
   </p>
 </section>
 
-<!-- ── SCREEN: LOADING ── -->
+<!-- ══ SCREEN 2: LOADING ════════════════════════════════════════════ -->
 <section class="screen" id="sc-load">
-  <div class="spinner"></div>
-  <div class="load-title" id="l-title">Loading AI model&hellip;</div>
-  <p class="load-sub" id="l-sub">Downloading BlazePose (~5 MB on first run).<br>Please keep this tab open and stay on the page.</p>
-  <p class="load-err" id="l-err"></p>
-  <button class="btn" id="retry-btn" style="display:none;margin-top:1.5rem;" onclick="location.reload()">Reload &amp; try again</button>
+  <div class="label">Initialising</div>
+  <h2 class="title">Loading AI<br>models&hellip;</h2>
+  <p class="body-text">Both models are cached after the first run (~20 MB total). Keep this tab active.</p>
+
+  <div style="margin-bottom:1.5rem;">
+    <!-- BlazePose row -->
+    <div class="model-row">
+      <span class="model-icon">🦴</span>
+      <div style="flex:1;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span class="model-name">BlazePose (MediaPipe)</span>
+          <span class="model-status" id="bp-status">Waiting&hellip;</span>
+        </div>
+        <div class="model-bar-wrap" id="bp-bar-wrap">
+          <div class="model-bar" id="bp-bar"></div>
+        </div>
+      </div>
+    </div>
+    <!-- Depth Anything row -->
+    <div class="model-row">
+      <span class="model-icon">📐</span>
+      <div style="flex:1;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span class="model-name">Depth Anything V2</span>
+          <span class="model-status" id="da-status">Waiting&hellip;</span>
+        </div>
+        <div class="model-bar-wrap" id="da-bar-wrap">
+          <div class="model-bar" id="da-bar"></div>
+        </div>
+      </div>
+    </div>
+    <!-- Camera row -->
+    <div class="model-row">
+      <span class="model-icon">📷</span>
+      <div style="flex:1;">
+        <div style="display:flex;justify-content:space-between;">
+          <span class="model-name">Camera</span>
+          <span class="model-status" id="cam-status">Waiting&hellip;</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p id="load-err" style="font-size:.76rem;color:var(--danger);line-height:1.7;display:none;"></p>
+  <button class="btn" id="reload-btn" style="display:none;" onclick="location.reload()">Reload &amp; retry</button>
 </section>
 
-<!-- ── SCREEN: CAMERA ── -->
+<!-- ══ SCREEN 3: CAMERA ═════════════════════════════════════════════ -->
 <section class="screen" id="sc-cam">
   <div class="progress">
     <div class="prog-bar" id="pb1"></div>
     <div class="prog-bar" id="pb2"></div>
     <div class="prog-bar" id="pb3"></div>
   </div>
-
-  <div class="screen-label" id="c-label">Step 1 of 2</div>
-  <h2 class="screen-title" id="c-title">Front view</h2>
-  <p class="screen-body" id="c-hint">Face the camera directly. Your full body — head to toes — must be visible in the frame before you capture.</p>
+  <div class="label">Step 1 of 1</div>
+  <h2 class="title">Front view</h2>
+  <p class="body-text">Face the camera. Full body — head to toes — must be in frame. Wait for "Ready to capture" before pressing the shutter.</p>
 
   <div class="cam-wrap">
     <video id="vid" autoplay playsinline muted></video>
-    <canvas id="cvs"></canvas>
+    <canvas id="pose-cvs"></canvas>
     <div class="guide-frame"></div>
-    <div class="guide-label" id="view-lbl">FRONT</div>
+    <div class="view-tag">FRONT</div>
     <div class="hud" id="hud">Searching for pose&hellip;</div>
-    <div class="countdown" id="cd"></div>
+    <div class="cd-overlay" id="cd"></div>
   </div>
 
-  <button class="shutter-ring" id="shutter" aria-label="Capture pose">
-    <div class="shutter-dot"></div>
-  </button>
-  <p class="privacy" style="margin-top:.5rem;">Tap when the skeleton overlay is visible and the status shows "Ready to capture"</p>
+  <div class="shutter-wrap">
+    <button class="shutter" id="shutter" aria-label="Capture">
+      <div class="shutter-dot"></div>
+    </button>
+  </div>
+  <p class="privacy" style="margin-top:.25rem;">Tap when skeleton is visible and status says "Ready to capture"</p>
 </section>
 
-<!-- ── SCREEN: RESULTS ── -->
+<!-- ══ SCREEN 4: PROCESSING ═════════════════════════════════════════ -->
+<section class="screen" id="sc-proc">
+  <div class="progress">
+    <div class="prog-bar done"></div>
+    <div class="prog-bar on"></div>
+    <div class="prog-bar"></div>
+  </div>
+  <div class="label">Analysing depth</div>
+  <h2 class="title">Depth AI<br>running&hellip;</h2>
+  <p class="body-text" id="proc-msg">Depth Anything V2 is computing a per-pixel depth map of your body. This takes 5–15 seconds.</p>
+
+  <div class="proc-canvas-wrap">
+    <canvas id="depth-cvs"></canvas>
+    <div class="proc-badge" id="proc-badge"><span class="spinner"></span>Computing depth map&hellip;</div>
+  </div>
+</section>
+
+<!-- ══ SCREEN 5: RESULTS ════════════════════════════════════════════ -->
 <section class="screen" id="sc-res">
   <div class="progress">
     <div class="prog-bar done"></div>
     <div class="prog-bar done"></div>
     <div class="prog-bar done"></div>
   </div>
+  <div class="label">Complete</div>
+  <h2 class="title">Your measurements</h2>
+  <p class="body-text" id="res-meta"></p>
 
-  <div class="screen-label">Complete</div>
-  <h2 class="screen-title">Your measurements</h2>
-  <p class="screen-body" id="res-meta"></p>
+  <div id="depth-conf-wrap" style="margin-bottom:1.1rem;display:none;">
+    <div style="display:flex;justify-content:space-between;font-size:.65rem;color:var(--muted);margin-bottom:4px;">
+      <span>Depth calibration confidence</span>
+      <span id="conf-pct">—</span>
+    </div>
+    <div class="depth-conf">
+      <div class="depth-conf-fill" id="conf-fill"></div>
+    </div>
+    <p style="font-size:.62rem;color:var(--muted);margin-top:5px;" id="conf-note"></p>
+  </div>
 
   <div class="legend">
-    <div class="legend-item"><span class="m-badge badge-meas">Measured</span> From pose landmarks (±1–2 cm)</div>
-    <div class="legend-item"><span class="m-badge badge-est">Estimated</span> Derived from proportions (±2–4 cm)</div>
-    <div class="legend-item"><span class="m-badge badge-fix">Fixed</span> Per brief specification</div>
+    <div class="legend-item"><span class="badge b-meas">Measured</span> Pose landmarks (±1–2 cm)</div>
+    <div class="legend-item"><span class="badge b-depth">Depth AI</span> Depth map (±1.5–3 cm)</div>
+    <div class="legend-item"><span class="badge b-est">Estimated</span> Proportions (±3–5 cm)</div>
+    <div class="legend-item"><span class="badge b-fix">Fixed</span> Per brief spec</div>
   </div>
 
   <div id="res-body"></div>
 
   <div class="disclaimer">
-    These figures are a <strong>working draft</strong> for your tailor. The camera method is accurate for lengths
-    and proportional for circumferences. Your tailor must verify all measurements with a tape measure at the first
-    toile fitting before cutting the final fabric.
+    These are a <strong>working draft</strong> for your tailor. Lengths are highly accurate.
+    Circumferences from Depth AI carry ±1.5–3 cm margin; proportional estimates ±3–5 cm.
+    Your tailor must verify all measurements with a tape at the first toile fitting.
   </div>
 
-  <button class="btn" style="margin-top:1.5rem;" onclick="redoMeasure()">Measure again &rarr;</button>
-  <button class="btn ghost" onclick="printResults()">Print / save as PDF</button>
+  <button class="btn" style="margin-top:1.4rem;" onclick="redoMeasure()">Measure again &rarr;</button>
+  <button class="btn ghost" onclick="window.print()">Print / save PDF</button>
 </section>
 
-
+<!-- ══ SCRIPTS ══════════════════════════════════════════════════════ -->
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/pose.js" crossorigin="anonymous"></script>
-<script>
-'use strict';
-// ── state ──────────────────────────────────────────────────────────────────
-let poseInst=null, camStream=null, rafId=null, busy=false;
-let currentView='front', fData=null, sData=null;
-let userH=175, userName='';
+<script type="module">
+import { pipeline } from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3/dist/transformers.min.js';
 
-// ── helpers ────────────────────────────────────────────────────────────────
-const $=id=>document.getElementById(id);
-function showScreen(id){
-  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+// ── state ─────────────────────────────────────────────────────────────────
+let blazePoseModel  = null;
+let depthModel      = null;
+let camStream       = null;
+let rafId           = null;
+let poseBusy        = false;
+let latestLm        = null;   // live landmarks for HUD
+let capturedLm      = null;   // frozen landmarks at shutter press
+let capturedCanvas  = null;   // frozen video frame at shutter press
+let userH           = 175;
+let userName        = '';
+
+// ── DOM helpers ───────────────────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   $(id).classList.add('active');
-  window.scrollTo({top:0,behavior:'smooth'});
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
-function setLoad(title,sub){$('l-title').textContent=title;$('l-sub').textContent=sub;}
-function setErr(msg){$('l-err').textContent=msg;$('retry-btn').style.display='block';}
+function setStatus(id, text, cls) {
+  const el = $(id);
+  el.textContent = text;
+  el.className = 'model-status ' + (cls || '');
+}
+function showErr(msg) {
+  $('load-err').textContent = msg;
+  $('load-err').style.display = 'block';
+  $('reload-btn').style.display = 'block';
+}
 
-// ── init ───────────────────────────────────────────────────────────────────
-async function startApp(){
-  userH=parseInt($('ht-in').value)||175;
-  userName=$('nm-in').value.trim();
+// ── entry ─────────────────────────────────────────────────────────────────
+window.startApp = async function() {
+  userH     = parseInt($('ht-in').value) || 175;
+  userName  = $('nm-in').value.trim();
   showScreen('sc-load');
-  try{
-    if(typeof Pose==='undefined') throw new Error('MediaPipe did not load. Check your internet connection, then reload.');
-    setLoad('Initialising BlazePose…','Setting up the pose detection model. This may take a moment on first run.');
-    poseInst=new Pose({locateFile:f=>`https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/${f}`});
-    poseInst.setOptions({modelComplexity:0,smoothLandmarks:true,enableSegmentation:false,minDetectionConfidence:0.5,minTrackingConfidence:0.5});
-    poseInst.onResults(onResults);
-    await openCamera('front');
-  } catch(e){ setLoad('Failed to load',''); setErr(e.message); }
+  try {
+    await loadModels();
+  } catch(e) {
+    showErr(e.message);
+  }
+};
+
+// ── model loading ─────────────────────────────────────────────────────────
+async function loadModels() {
+  // ── 1. BlazePose ──
+  setStatus('bp-status', 'Initialising…', 'spin');
+  if (typeof Pose === 'undefined') throw new Error('MediaPipe Pose script failed to load. Check network.');
+  blazePoseModel = new Pose({
+    locateFile: f => `https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/${f}`
+  });
+  blazePoseModel.setOptions({
+    modelComplexity: 1,
+    smoothLandmarks: true,
+    enableSegmentation: false,
+    minDetectionConfidence: 0.55,
+    minTrackingConfidence: 0.55
+  });
+  blazePoseModel.onResults(onPoseResults);
+  setStatus('bp-status', '✓ Ready', 'ok');
+
+  // ── 2. Depth Anything V2 ──
+  setStatus('da-status', 'Downloading…', 'spin');
+  $('da-bar-wrap').style.display = 'block';
+
+  // Detect WebGPU availability
+  let device = 'wasm';
+  try {
+    if (navigator.gpu) {
+      const adapter = await navigator.gpu.requestAdapter();
+      if (adapter) device = 'webgpu';
+    }
+  } catch(_) {}
+
+  depthModel = await pipeline(
+    'depth-estimation',
+    'onnx-community/depth-anything-v2-small',
+    {
+      device,
+      progress_callback: (p) => {
+        if (p.status === 'progress' && p.total > 0) {
+          const pct = Math.round(p.progress);
+          $('da-bar').style.width = pct + '%';
+          setStatus('da-status', `${pct}%…`, 'spin');
+        }
+        if (p.status === 'ready') {
+          $('da-bar').style.width = '100%';
+        }
+      }
+    }
+  );
+  setStatus('da-status', `✓ Ready (${device.toUpperCase()})`, 'ok');
+
+  // ── 3. Camera ──
+  setStatus('cam-status', 'Opening…', 'spin');
+  await openCamera();
+  setStatus('cam-status', '✓ Active', 'ok');
 }
 
 // ── camera ─────────────────────────────────────────────────────────────────
-async function openCamera(view){
+async function openCamera() {
   stopCamera();
-  currentView=view; busy=false;
-  try{
-    camStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:480},height:{ideal:640}},audio:false});
-  } catch(fe){
-    try{ camStream=await navigator.mediaDevices.getUserMedia({video:true,audio:false}); }
-    catch(e){ showScreen('sc-load'); setLoad('Camera denied',''); setErr('Camera access was denied: '+e.message); return; }
+  poseBusy = false; latestLm = null;
+
+  try {
+    camStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: 'environment' }, width: { ideal: 480 }, height: { ideal: 640 } },
+      audio: false
+    });
+  } catch(_) {
+    try {
+      camStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+    } catch(e) {
+      throw new Error('Camera access denied: ' + e.message);
+    }
   }
-  if(view==='front'){
-    setPB([1,0,0]);
-    $('c-label').textContent='Step 1 of 2';
-    $('c-title').textContent='Front view';
-    $('c-hint').textContent='Face the camera directly. Your full body — head to toes — must be visible before you capture.';
-    $('view-lbl').textContent='FRONT';
-  } else {
-    setPB([2,1,0]);
-    $('c-label').textContent='Step 2 of 2';
-    $('c-title').textContent='Right side view';
-    $('c-hint').textContent='Turn so your right side faces the camera. Stand naturally erect, arms at your sides.';
-    $('view-lbl').textContent='SIDE';
-  }
+
+  $('pb1').className = 'prog-bar on';
+  $('pb2').className = 'prog-bar';
+  $('pb3').className = 'prog-bar';
   showScreen('sc-cam');
-  const vid=$('vid');
-  vid.srcObject=camStream;
-  await vid.play().catch(()=>{});
-  startLoop();
+
+  const vid = $('vid');
+  vid.srcObject = camStream;
+  await vid.play().catch(() => {});
+  startPoseLoop();
 }
 
-function setPB(states){
-  const ids=['pb1','pb2','pb3'];
-  const cls=['done','active',''];
-  ids.forEach((id,i)=>{ $(id).className='prog-bar'; if(states[i]<2) $(id).classList.add(cls[states[i]]); });
+function stopCamera() {
+  if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+  if (camStream) { camStream.getTracks().forEach(t => t.stop()); camStream = null; }
 }
 
-function stopCamera(){
-  if(rafId){ cancelAnimationFrame(rafId); rafId=null; }
-  if(camStream){ camStream.getTracks().forEach(t=>t.stop()); camStream=null; }
-}
-
-function startLoop(){
-  const vid=$('vid');
-  async function tick(){
-    rafId=requestAnimationFrame(tick);
-    if(!busy && vid.readyState>=2 && poseInst){
-      busy=true;
-      try{ await poseInst.send({image:vid}); } catch(e){ console.warn('pose err',e); }
-      busy=false;
+// ── BlazePose live loop ────────────────────────────────────────────────────
+function startPoseLoop() {
+  const vid = $('vid');
+  async function tick() {
+    rafId = requestAnimationFrame(tick);
+    if (!poseBusy && vid.readyState >= 2 && blazePoseModel) {
+      poseBusy = true;
+      try { await blazePoseModel.send({ image: vid }); } catch(e) { console.warn(e); }
+      poseBusy = false;
     }
   }
-  rafId=requestAnimationFrame(tick);
+  rafId = requestAnimationFrame(tick);
 }
 
-// ── pose results ───────────────────────────────────────────────────────────
-function onResults(res){
-  const vid=$('vid'), cvs=$('cvs'), ctx=cvs.getContext('2d');
-  const W=vid.videoWidth||480, H=vid.videoHeight||640;
-  cvs.width=W; cvs.height=H;
-  ctx.clearRect(0,0,W,H);
-  const hud=$('hud');
-  if(res.poseLandmarks && res.poseLandmarks.length){
-    window._latestLm=res.poseLandmarks;
-    drawSkeleton(ctx,res.poseLandmarks,W,H);
-    const full=bodyInFrame(res.poseLandmarks);
-    const oriented=currentView==='side'?checkSide(res.poseLandmarks):checkFront(res.poseLandmarks);
-    if(!full){
-      hud.textContent='Step back — full body not in frame'; hud.className='hud warn';
-    } else if(!oriented){
-      hud.textContent=currentView==='side'?'Turn more sideways — right shoulder should hide behind left':'Turn to face the camera directly';
-      hud.className='hud warn';
+// ── pose results (live) ────────────────────────────────────────────────────
+const BONES = [
+  [11,12],[11,13],[13,15],[12,14],[14,16],
+  [11,23],[12,24],[23,24],
+  [23,25],[24,26],[25,27],[26,28],[27,29],[28,30],[29,31],[30,32]
+];
+
+function onPoseResults(res) {
+  const vid = $('vid');
+  const cvs = $('pose-cvs');
+  const ctx = cvs.getContext('2d');
+  const W = vid.videoWidth || 480;
+  const H = vid.videoHeight || 640;
+  cvs.width = W; cvs.height = H;
+  ctx.clearRect(0, 0, W, H);
+
+  const hud = $('hud');
+  if (res.poseLandmarks && res.poseLandmarks.length) {
+    latestLm = res.poseLandmarks;
+    drawSkeleton(ctx, latestLm, W, H);
+
+    const fullBody = isFullBody(latestLm);
+    const facing   = isFacingFront(latestLm);
+    const earVis   = (latestLm[7]?.visibility ?? 0) > 0.3 && (latestLm[8]?.visibility ?? 0) > 0.3;
+
+    if (!fullBody) {
+      hud.textContent = 'Step back — full body not in frame'; hud.className = 'hud warn';
+    } else if (!facing) {
+      hud.textContent = 'Turn to face the camera directly'; hud.className = 'hud warn';
+    } else if (!earVis) {
+      hud.textContent = 'Ears should be visible — check lighting'; hud.className = 'hud warn';
     } else {
-      hud.textContent='Ready to capture'; hud.className='hud ok';
+      hud.textContent = 'Ready to capture'; hud.className = 'hud ok';
     }
   } else {
-    window._latestLm=null;
-    hud.textContent='Searching for pose…'; hud.className='hud';
+    latestLm = null;
+    hud.textContent = 'Searching for pose…'; hud.className = 'hud';
   }
 }
 
-function bodyInFrame(lm){
-  return lm[0].y<0.20 && (lm[29].y+lm[30].y)/2>0.78 && lm[0].visibility>0.4;
+function isFullBody(lm) {
+  return lm[0].y < 0.20 && (lm[29].y + lm[30].y) / 2 > 0.78 && (lm[0].visibility ?? 0) > 0.4;
 }
-function checkFront(lm){ return Math.abs(lm[11].x-lm[12].x)>0.13; }
-function checkSide(lm){ return Math.abs(lm[11].x-lm[12].x)<0.13; }
+function isFacingFront(lm) {
+  return Math.abs(lm[11].x - lm[12].x) > 0.12;
+}
 
-const BONES=[
-  [11,12],[11,13],[13,15],[12,14],[14,16],
-  [11,23],[12,24],[23,24],[23,25],[24,26],
-  [25,27],[26,28],[27,29],[28,30],[29,31],[30,32]
-];
-function drawSkeleton(ctx,lm,W,H){
-  ctx.lineWidth=2; ctx.strokeStyle='rgba(184,144,42,0.75)';
-  for(const[a,b] of BONES){
-    if((lm[a]?.visibility??0)<0.3||(lm[b]?.visibility??0)<0.3) continue;
-    ctx.beginPath(); ctx.moveTo(lm[a].x*W,lm[a].y*H); ctx.lineTo(lm[b].x*W,lm[b].y*H); ctx.stroke();
+function drawSkeleton(ctx, lm, W, H) {
+  ctx.lineWidth = 2.2;
+  ctx.strokeStyle = 'rgba(184,144,42,0.80)';
+  for (const [a, b] of BONES) {
+    if ((lm[a]?.visibility ?? 0) < 0.28 || (lm[b]?.visibility ?? 0) < 0.28) continue;
+    ctx.beginPath();
+    ctx.moveTo(lm[a].x * W, lm[a].y * H);
+    ctx.lineTo(lm[b].x * W, lm[b].y * H);
+    ctx.stroke();
   }
-  ctx.fillStyle='rgba(245,241,235,0.9)';
-  for(let i=11;i<lm.length;i++){
-    if((lm[i]?.visibility??0)<0.3) continue;
-    ctx.beginPath(); ctx.arc(lm[i].x*W,lm[i].y*H,3.5,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle = 'rgba(245,241,235,0.92)';
+  for (let i = 0; i < lm.length; i++) {
+    if ((lm[i]?.visibility ?? 0) < 0.28) continue;
+    ctx.beginPath();
+    ctx.arc(lm[i].x * W, lm[i].y * H, 3.5, 0, Math.PI * 2);
+    ctx.fill();
   }
 }
 
 // ── shutter ────────────────────────────────────────────────────────────────
-$('shutter').addEventListener('click', function(){
-  if(!window._latestLm){ $('hud').textContent='No pose detected — wait for skeleton'; $('hud').className='hud warn'; return; }
-  this.disabled=true;
-  let n=3;
-  const cd=$('cd'); cd.textContent=n; cd.style.display='flex';
-  const iv=setInterval(async ()=>{
+$('shutter').addEventListener('click', function() {
+  if (!latestLm) {
+    $('hud').textContent = 'No pose — wait for skeleton';
+    $('hud').className = 'hud warn';
+    return;
+  }
+  this.disabled = true;
+  let n = 3;
+  const cd = $('cd');
+  cd.textContent = n; cd.style.display = 'flex';
+  const iv = setInterval(async () => {
     n--;
-    if(n>0){ cd.textContent=n; return; }
-    clearInterval(iv); cd.style.display='none'; this.disabled=false;
-    const snap=window._latestLm.map(l=>({...l}));
-    const vid=$('vid');
-    const dim={w:vid.videoWidth||480, h:vid.videoHeight||640};
-    if(currentView==='front'){
-      fData={lm:snap,...dim};
-      await openCamera('side');
-    } else {
-      sData={lm:snap,...dim};
-      stopCamera();
-      buildResults();
+    if (n > 0) { cd.textContent = n; return; }
+    clearInterval(iv); cd.style.display = 'none'; this.disabled = false;
+
+    // Freeze landmarks and capture video frame
+    capturedLm = latestLm.map(l => ({ ...l }));
+    const vid = $('vid');
+    const W = vid.videoWidth, H = vid.videoHeight;
+    capturedCanvas = document.createElement('canvas');
+    capturedCanvas.width  = W;
+    capturedCanvas.height = H;
+    capturedCanvas.getContext('2d').drawImage(vid, 0, 0);
+
+    // Stop camera, go to processing screen
+    stopCamera();
+    showScreen('sc-proc');
+
+    // Draw the captured frame in the processing canvas
+    const procCvs = $('depth-cvs');
+    procCvs.width = W; procCvs.height = H;
+    procCvs.getContext('2d').drawImage(capturedCanvas, 0, 0);
+    $('proc-badge').innerHTML = '<span class="spinner"></span>Running Depth Anything V2…';
+
+    // Run depth estimation
+    try {
+      const result = await depthModel(capturedCanvas);
+      const depthImg = result.depth; // RawImage: higher = closer
+      // Visualize depth map
+      renderDepthViz(depthImg, capturedLm, procCvs, W, H);
+      $('proc-badge').textContent = '✓ Depth map complete — computing measurements…';
+      // Small pause so user sees the depth map
+      await new Promise(r => setTimeout(r, 800));
+      buildResults(capturedLm, W, H, depthImg);
+    } catch(e) {
+      console.error('Depth failed:', e);
+      $('proc-badge').textContent = 'Depth failed — using proportion estimates';
+      await new Promise(r => setTimeout(r, 1200));
+      buildResults(capturedLm, W, H, null);
     }
-  },1000);
+  }, 1000);
 });
 
-// ── measurements ───────────────────────────────────────────────────────────
-function calcMeasurements(){
-  const f=fData, s=sData;
-  const fy=i=>f.lm[i].y*f.h, fx=i=>f.lm[i].x*f.w;
-  const noseY=fy(0), heelY=(fy(29)+fy(30))/2, span=heelY-noseY;
-  if(span<=0) throw new Error('Invalid front pose data — please retake.');
-  // 1 pixel = scF cm
-  const scF=(userH*0.935)/span;
+// ── depth visualisation ────────────────────────────────────────────────────
+function heatColor(t) {
+  // Inferno-like: dark purple → orange → yellow
+  t = Math.max(0, Math.min(1, t));
+  if (t < 0.33) {
+    const s = t / 0.33;
+    return [Math.floor(s * 180), 0, Math.floor(80 + s * 100)];
+  } else if (t < 0.66) {
+    const s = (t - 0.33) / 0.33;
+    return [Math.floor(180 + s * 75), Math.floor(s * 100), Math.floor(180 - s * 180)];
+  } else {
+    const s = (t - 0.66) / 0.34;
+    return [255, Math.floor(100 + s * 155), Math.floor(s * 60)];
+  }
+}
 
-  const shoulderY=(fy(11)+fy(12))/2;
-  const hipY=(fy(23)+fy(24))/2;
-  const kneeY=(fy(25)+fy(26))/2;
-  const ankleY=(fy(27)+fy(28))/2;
-  // natural waist ~20% up from hip toward shoulder
-  const waistY=hipY-0.20*(hipY-shoulderY);
+function renderDepthViz(depthImg, lm, targetCvs, origW, origH) {
+  const dW = depthImg.width, dH = depthImg.height;
+  const ch = depthImg.channels || 3;
 
-  // lengths (high accuracy)
-  const outseam=Math.round((heelY-waistY)*scF);
-  const inseam=Math.round((heelY-hipY)*scF);
-  const fRise=Math.round((hipY-waistY)*scF);
-  const bRise=Math.round(fRise+4.5);
-  const kneeHt=Math.round((kneeY-hipY)*scF);
-  const finLen=Math.round(outseam-4.5);
+  // Find min/max for normalisation
+  let mn = 255, mx = 0;
+  for (let i = 0; i < dW * dH; i++) {
+    const v = depthImg.data[i * ch];
+    if (v < mn) mn = v;
+    if (v > mx) mx = v;
+  }
+  const range = mx - mn || 1;
 
-  // widths from front view
-  const hipW=Math.abs(fx(23)-fx(24))*scF;
-  const kneeW=Math.abs(fx(25)-fx(26))*scF;
-  const ankleW=Math.abs(fx(27)-fx(28))*scF;
-  const shdW=Math.abs(fx(11)-fx(12))*scF;
-  // waist width estimated from shoulder+hip
-  const waistW=shdW*0.30+hipW*0.70;
+  // Draw heatmap to an offscreen canvas at depth resolution
+  const off = document.createElement('canvas');
+  off.width = dW; off.height = dH;
+  const octx = off.getContext('2d');
+  const imgData = octx.createImageData(dW, dH);
+  for (let i = 0; i < dW * dH; i++) {
+    const t = (depthImg.data[i * ch] - mn) / range;
+    const [r, g, b] = heatColor(t);
+    imgData.data[i * 4]     = r;
+    imgData.data[i * 4 + 1] = g;
+    imgData.data[i * 4 + 2] = b;
+    imgData.data[i * 4 + 3] = 230;
+  }
+  octx.putImageData(imgData, 0, 0);
 
-  // side view for depth
-  const sy=i=>s.lm[i].y*s.h, sx=i=>s.lm[i].x*s.w;
-  const sNose=sy(0), sHeel=(sy(29)+sy(30))/2, sSpan=sHeel-sNose;
-  if(sSpan<=0) throw new Error('Invalid side pose data — please retake.');
-  const scS=(userH*0.935)/sSpan;
-  const seatDepth=Math.abs(sx(23)-sx(24))*scS;
-  const waistDepth=Math.abs(sx(11)-sx(12))*scS*0.68;
-  const thighDepth=seatDepth*0.70;
+  // Draw to target canvas
+  const ctx = targetCvs.getContext('2d');
+  ctx.clearRect(0, 0, origW, origH);
+  ctx.drawImage(off, 0, 0, origW, origH);
 
-  // Ramanujan ellipse approximation for circumferences
-  function ellipseC(a,b){ a/=2; b/=2; if(a<=0||b<=0) return a*2*Math.PI; return Math.PI*(3*(a+b)-Math.sqrt((3*a+b)*(a+3*b))); }
+  // Draw skeleton overlay on depth map
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = 'rgba(255,255,255,0.7)';
+  for (const [a, b] of BONES) {
+    if ((lm[a]?.visibility ?? 0) < 0.28 || (lm[b]?.visibility ?? 0) < 0.28) continue;
+    ctx.beginPath();
+    ctx.moveTo(lm[a].x * origW, lm[a].y * origH);
+    ctx.lineTo(lm[b].x * origW, lm[b].y * origH);
+    ctx.stroke();
+  }
+  ctx.fillStyle = 'rgba(255,255,255,0.85)';
+  for (let i = 0; i < lm.length; i++) {
+    if ((lm[i]?.visibility ?? 0) < 0.28) continue;
+    ctx.beginPath();
+    ctx.arc(lm[i].x * origW, lm[i].y * origH, 3, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
 
-  const crotchCurve=Math.round(fRise*0.72+bRise*0.32);
+// ── depth analysis helpers ─────────────────────────────────────────────────
+function sampleDepthPatch(depthImg, nx, ny, radius = 4) {
+  const ch = depthImg.channels || 3;
+  const cx = Math.round(Math.max(0, Math.min(1, nx)) * (depthImg.width  - 1));
+  const cy = Math.round(Math.max(0, Math.min(1, ny)) * (depthImg.height - 1));
+  let sum = 0, count = 0;
+  for (let dy = -radius; dy <= radius; dy++) {
+    for (let dx = -radius; dx <= radius; dx++) {
+      const px = Math.min(Math.max(cx + dx, 0), depthImg.width  - 1);
+      const py = Math.min(Math.max(cy + dy, 0), depthImg.height - 1);
+      sum += depthImg.data[(py * depthImg.width + px) * ch];
+      count++;
+    }
+  }
+  return count > 0 ? sum / count : 0;
+}
+
+function getBackgroundDepth(depthImg, ny, edgeFraction = 0.14) {
+  const ch = depthImg.channels || 3;
+  const py = Math.round(Math.max(0, Math.min(1, ny)) * (depthImg.height - 1));
+  const leftEnd    = Math.floor(depthImg.width * edgeFraction);
+  const rightStart = Math.floor(depthImg.width * (1 - edgeFraction));
+  const samples = [];
+  for (let x = 0; x < leftEnd; x++) {
+    samples.push(depthImg.data[(py * depthImg.width + x) * ch]);
+  }
+  for (let x = rightStart; x < depthImg.width; x++) {
+    samples.push(depthImg.data[(py * depthImg.width + x) * ch]);
+  }
+  if (!samples.length) return 0;
+  // Use median for robustness
+  samples.sort((a, b) => a - b);
+  return samples[Math.floor(samples.length / 2)];
+}
+
+function getBodyProtrusion(depthImg, nx, ny) {
+  const bodyDepth = sampleDepthPatch(depthImg, nx, ny, 4);
+  const bgDepth   = getBackgroundDepth(depthImg, ny);
+  return Math.max(0, bodyDepth - bgDepth);
+}
+
+// ── core measurement calculation ───────────────────────────────────────────
+function calcMeasurements(lm, vidW, vidH, depthImg) {
+  const fy = i => lm[i].y * vidH;
+  const fx = i => lm[i].x * vidW;
+
+  // Height calibration (lateral scale factor)
+  const noseY  = fy(0);
+  const heelY  = (fy(29) + fy(30)) / 2;
+  const span   = heelY - noseY;
+  if (span <= 0) throw new Error('Invalid pose — please retake.');
+  const scF    = (userH * 0.935) / span; // cm per pixel (lateral)
+
+  // Key vertical positions (pixels)
+  const shoulderY = (fy(11) + fy(12)) / 2;
+  const hipY      = (fy(23) + fy(24)) / 2;
+  const kneeY     = (fy(25) + fy(26)) / 2;
+  const waistY    = hipY - 0.20 * (hipY - shoulderY);
+  const thighY    = hipY + 0.35 * (kneeY - hipY); // upper thigh
+
+  // Lateral widths (pixels → cm)
+  const headW_cm  = Math.abs(fx(7) - fx(8)) * scF;   // ear to ear
+  const shdW_cm   = Math.abs(fx(11) - fx(12)) * scF;
+  const hipW_cm   = Math.abs(fx(23) - fx(24)) * scF;
+  const kneeW_cm  = Math.abs(fx(25) - fx(26)) * scF;
+  const ankleW_cm = Math.abs(fx(27) - fx(28)) * scF;
+  const waistW_cm = shdW_cm * 0.28 + hipW_cm * 0.72;
+
+  // High-accuracy lengths (from landmarks)
+  const outseam      = Math.round((heelY - waistY) * scF);
+  const inseam       = Math.round((heelY - hipY)   * scF);
+  const fRise        = Math.round((hipY  - waistY)  * scF);
+  const bRise        = Math.round(fRise + 4.5);
+  const kneeHt       = Math.round((kneeY - hipY)    * scF);
+  const finLen       = Math.round(outseam - 4.5);
+  const crotchCurve  = Math.round(fRise * 0.72 + bRise * 0.32);
+
+  // Ramanujan ellipse approximation
+  function ellipseC(w, d) {
+    const a = w / 2, b = d / 2;
+    if (a <= 0 || b <= 0) return w * Math.PI;
+    return Math.PI * (3 * (a + b) - Math.sqrt((3 * a + b) * (a + 3 * b)));
+  }
+
+  // ── DEPTH-BASED CIRCUMFERENCES ──────────────────────────────────────────
+  let depthCalibrated = false;
+  let depthConf = 0; // 0-1
+  let waist, seat, thigh, knee;
+
+  if (depthImg) {
+    try {
+      // Calibrate depth scale using the head
+      // Head protrusion from background ≈ half the head's front-to-back depth
+      // Average head depth:width ratio ≈ 1.25 → half-depth ≈ headWidth × 0.625
+      const earVis = ((lm[7]?.visibility ?? 0) + (lm[8]?.visibility ?? 0)) / 2;
+      let depthScaleFactor = null;
+
+      if (earVis > 0.45 && headW_cm > 10 && headW_cm < 35) {
+        const headHalfD_expected  = headW_cm * 0.625;
+        const noseProtrusion      = getBodyProtrusion(depthImg, lm[0].x, lm[0].y);
+        if (noseProtrusion > 4) {
+          depthScaleFactor = headHalfD_expected / noseProtrusion;
+          // Sanity check: scale should give realistic values (0.03–0.5 cm per raw unit)
+          if (depthScaleFactor < 0.03 || depthScaleFactor > 0.5) depthScaleFactor = null;
+        }
+      }
+
+      if (depthScaleFactor) {
+        // Depth confidence based on nose protrusion SNR and ear visibility
+        const noseP = getBodyProtrusion(depthImg, lm[0].x, lm[0].y);
+        depthConf = Math.min(1, (earVis * 0.4 + Math.min(noseP / 30, 1) * 0.6));
+        depthCalibrated = true;
+
+        // Helper: body half-depth in cm at a given normalised coordinate
+        const halfDepthCm = (nx, ny) => {
+          const prot = getBodyProtrusion(depthImg, nx, ny);
+          return Math.max(2, prot * depthScaleFactor);
+        };
+
+        // Waist
+        const waistNX = (lm[23].x + lm[24].x) / 2;
+        const waistNY = waistY / vidH;
+        const waistD  = halfDepthCm(waistNX, waistNY) * 2;
+        waist = Math.round(ellipseC(waistW_cm, waistD) + 1.5);
+
+        // Seat / hip
+        const hipNX = (lm[23].x + lm[24].x) / 2;
+        const hipNY = lm[23].y;
+        const hipD  = halfDepthCm(hipNX, hipNY) * 2;
+        seat = Math.round(ellipseC(hipW_cm, hipD) + 2.0);
+
+        // Thigh
+        const thighNX = hipNX;
+        const thighNY = thighY / vidH;
+        const thighD  = halfDepthCm(thighNX, thighNY) * 2;
+        thigh = Math.round(ellipseC(hipW_cm * 0.62, thighD) + 1.5);
+
+        // Knee
+        const kneeNX = (lm[25].x + lm[26].x) / 2;
+        const kneeNY = lm[25].y;
+        const kneeD  = halfDepthCm(kneeNX, kneeNY) * 2;
+        knee = Math.round(ellipseC(kneeW_cm, kneeD) + 1.0);
+      }
+    } catch(e) {
+      console.warn('Depth analysis error:', e);
+    }
+  }
+
+  // Fall back to proportion estimates for any missing values
+  function ellipseEst(w, depthRatio) {
+    return Math.round(ellipseC(w, w * depthRatio));
+  }
+  if (waist  == null) waist  = ellipseEst(waistW_cm,  0.78) + 2;
+  if (seat   == null) seat   = ellipseEst(hipW_cm,    0.82) + 3;
+  if (thigh  == null) thigh  = ellipseEst(hipW_cm * 0.62, 0.78) + 2;
+  if (knee   == null) knee   = ellipseEst(kneeW_cm,   0.90) + 1;
+  const ankle = Math.round(Math.max(ankleW_cm * 2.85 + 1, 22));
 
   return {
-    waist:   Math.round(ellipseC(waistW, waistDepth)+2.0),
-    seat:    Math.round(ellipseC(hipW,   seatDepth)+3.5),
-    thigh:   Math.round(ellipseC(hipW*0.60, thighDepth)+2.0),
-    knee:    Math.round(kneeW*2.9+1.5),
-    ankle:   Math.round(Math.max(ankleW*2.8+1.0, 22)),
-    outseam, inseam, fRise, bRise, kneeHt, finLen, crotchCurve
+    waist, seat, thigh, knee, ankle,
+    outseam, inseam, fRise, bRise, kneeHt, finLen, crotchCurve,
+    depthCalibrated, depthConf
   };
 }
 
-// ── results UI ─────────────────────────────────────────────────────────────
-function buildResults(){
-  showScreen('sc-res');
-  const when=new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
-  $('res-meta').textContent=(userName?userName+' · ':'')+`Height ${userH} cm · ${when}`;
+// ── results rendering ──────────────────────────────────────────────────────
+function buildResults(lm, vidW, vidH, depthImg) {
   let m;
-  try{ m=calcMeasurements(); }
-  catch(e){ $('res-body').innerHTML=`<p style="color:var(--danger);font-size:.82rem;padding:1rem 0;">${e.message}</p>`; return; }
+  try {
+    m = calcMeasurements(lm, vidW, vidH, depthImg);
+  } catch(e) {
+    showScreen('sc-res');
+    $('res-body').innerHTML = `<p style="color:var(--danger);font-size:.8rem;padding:1rem 0;">${e.message}</p>`;
+    return;
+  }
 
-  const sections=[
+  showScreen('sc-res');
+
+  // Header
+  const when = new Date().toLocaleDateString('en-GB', { day:'numeric', month:'long', year:'numeric' });
+  $('res-meta').textContent = (userName ? userName + ' · ' : '') + `Height ${userH} cm · ${when}`;
+
+  // Depth confidence
+  if (m.depthCalibrated) {
+    const pct  = Math.round(m.depthConf * 100);
+    const confEl = $('depth-conf-wrap');
+    confEl.style.display = 'block';
+    $('conf-pct').textContent  = pct + '%';
+    $('conf-fill').style.width = pct + '%';
+    $('conf-fill').style.background = pct > 70 ? 'var(--success)' : pct > 40 ? 'var(--gold)' : 'var(--danger)';
+    $('conf-note').textContent = pct > 70
+      ? 'Good depth signal — circumferences are well-calibrated'
+      : pct > 40
+      ? 'Moderate depth signal — consider better lighting or a plainer background'
+      : 'Low depth signal — circumferences estimated from proportions as fallback';
+  }
+
+  // Badge logic
+  const circumBadge = (m.depthCalibrated && m.depthConf > 0.35) ? 'b-depth' : 'b-est';
+  const circumText  = (m.depthCalibrated && m.depthConf > 0.35) ? 'Depth AI' : 'Estimated';
+
+  const sections = [
     {
-      label:'Circumferences (ease included)',
-      rows:[
-        {n:'01',l:'Natural waist',d:'At belly button · high-rise',v:m.waist,c:'est'},
-        {n:'02',l:'Seat / hip',d:'Fullest part of the seat',v:m.seat,c:'est'},
-        {n:'03',l:'Thigh',d:'Upper thigh, one leg',v:m.thigh,c:'est'},
-        {n:'04',l:'Knee',d:'At centre of kneecap',v:m.knee,c:'est'},
-        {n:'05',l:'Ankle / hem opening',d:'At ankle bone',v:m.ankle,c:'est'},
+      label: 'Circumferences (ease included)',
+      rows: [
+        { n:'01', l:'Natural waist',      d:'At belly button · high-rise position', v:m.waist,  c:circumBadge, ct:circumText },
+        { n:'02', l:'Seat / hip',         d:'Fullest part of the seat',             v:m.seat,   c:circumBadge, ct:circumText },
+        { n:'03', l:'Thigh',              d:'Upper thigh — one leg',                v:m.thigh,  c:circumBadge, ct:circumText },
+        { n:'04', l:'Knee',               d:'At centre of kneecap',                 v:m.knee,   c:circumBadge, ct:circumText },
+        { n:'05', l:'Ankle / hem opening',d:'At ankle bone',                         v:m.ankle,  c:'b-est',     ct:'Estimated' },
       ]
     },
     {
-      label:'Lengths',
-      rows:[
-        {n:'06',l:'Outseam',d:'Waistband top to heel',v:m.outseam,c:'meas'},
-        {n:'07',l:'Inseam',d:'Crotch point to heel',v:m.inseam,c:'meas'},
-        {n:'08',l:'Full rise — front',d:'Belly button to crotch',v:m.fRise,c:'meas'},
-        {n:'09',l:'Full rise — back',d:'Back waist to crotch',v:m.bRise,c:'est'},
-        {n:'10',l:'Knee height',d:'Hip joint to kneecap',v:m.kneeHt,c:'meas'},
-        {n:'11',l:'Finished trouser length',d:'Single break, covers ⅔ of shoe',v:m.finLen,c:'meas'},
+      label: 'Lengths',
+      rows: [
+        { n:'06', l:'Outseam',             d:'Waistband top to heel',               v:m.outseam,  c:'b-meas', ct:'Measured' },
+        { n:'07', l:'Inseam',              d:'Crotch point to heel',                v:m.inseam,   c:'b-meas', ct:'Measured' },
+        { n:'08', l:'Full rise — front',   d:'Belly button to crotch',              v:m.fRise,    c:'b-meas', ct:'Measured' },
+        { n:'09', l:'Full rise — back',    d:'Back waist to crotch',                v:m.bRise,    c:'b-est',  ct:'Estimated'},
+        { n:'10', l:'Knee height',         d:'Hip joint to kneecap',                v:m.kneeHt,   c:'b-meas', ct:'Measured' },
+        { n:'11', l:'Finished trouser length', d:'Single break, covers ⅔ of shoe', v:m.finLen,   c:'b-meas', ct:'Measured' },
       ]
     },
     {
-      label:'Derived & fixed',
-      rows:[
-        {n:'12',l:'Crotch curve',d:'Following the body curve',v:m.crotchCurve,c:'est'},
-        {n:'13',l:'Waistband width',d:'Per brief specification',v:'4.5',c:'fix'},
-        {n:'14',l:'Cuff depth (turn-up)',d:'Per brief specification',v:'4.5',c:'fix'},
+      label: 'Derived & fixed',
+      rows: [
+        { n:'12', l:'Crotch curve',        d:'Following the body curve',            v:m.crotchCurve, c:'b-est', ct:'Estimated'},
+        { n:'13', l:'Waistband width',     d:'Per brief specification',             v:'4.5',         c:'b-fix', ct:'Fixed'    },
+        { n:'14', l:'Cuff depth (turn-up)',d:'Per brief specification',             v:'4.5',         c:'b-fix', ct:'Fixed'    },
       ]
     }
   ];
 
-  const badgeTxt={meas:'Measured',est:'Estimated',fix:'Fixed'};
-  const badgeCls={meas:'badge-meas',est:'badge-est',fix:'badge-fix'};
-
-  let html='';
-  for(const sec of sections){
-    html+=`<div class="section-hd">${sec.label}</div>`;
-    for(const r of sec.rows){
-      html+=`<div class="m-row">
-        <span class="m-num">${r.n}</span>
-        <span class="m-name">${r.l}<small>${r.d}</small></span>
-        <span class="m-val">${r.v} <span>cm</span></span>
-        <span class="m-badge ${badgeCls[r.c]}">${badgeTxt[r.c]}</span>
-      </div>`;
+  let html = '';
+  for (const sec of sections) {
+    html += `<div class="section-hd">${sec.label}</div>`;
+    for (const r of sec.rows) {
+      html += `
+        <div class="m-row">
+          <span class="m-num">${r.n}</span>
+          <span class="m-name">${r.l}<small>${r.d}</small></span>
+          <span class="m-val">${r.v} <span>cm</span></span>
+          <span class="badge ${r.c}">${r.ct}</span>
+        </div>`;
     }
   }
-  $('res-body').innerHTML=html;
+  $('res-body').innerHTML = html;
 }
 
-function redoMeasure(){ fData=sData=null; openCamera('front'); }
-function printResults(){ window.print(); }
+// ── redo ───────────────────────────────────────────────────────────────────
+window.redoMeasure = async function() {
+  capturedLm = capturedCanvas = null;
+  $('depth-conf-wrap').style.display = 'none';
+  $('res-body').innerHTML = '';
+  await openCamera();
+};
 </script>
 
 <style media="print">
-  .site-header { border:none; }
-  .btn { display:none; }
-  .screen { display:none !important; }
-  #sc-res { display:block !important; }
-  .disclaimer { border:1px solid #ccc; }
+.site-header { border:none; padding:.5rem 0; }
+.screen      { display:none !important; }
+#sc-res      { display:block !important; }
+.btn         { display:none !important; }
 </style>
 </body>
 </html>
