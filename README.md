@@ -41,7 +41,7 @@ Results can be printed or saved as a PDF to hand directly to your tailor.
 
 | Component | Detail |
 |---|---|
-| **Pose detection** | [MediaPipe BlazePose](https://google.github.io/mediapipe/solutions/pose) (model complexity 0) |
+| **Pose detection** | [MediaPipe BlazePose](https://github.com/google-ai-edge/mediapipe/blob/master/docs/solutions/pose.md) (model complexity 0) |
 | **Licence** | Apache 2.0 — free for personal and commercial use |
 | **Processing** | Entirely on-device; no images, landmarks, or measurements are transmitted |
 | **Dependencies** | Zero npm packages; one CDN script tag |
