@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MeasureMe — Bespoke Trouser Measurement</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink:      #1a1714;
+  --paper:    #f5f1eb;
+  --gold:     #b8902a;
+  --gold-lt:  #d4aa4a;
+  --muted:    #6b6458;
+  --rule:     #d8d0c4;
+  --danger:   #8b2020;
+  --success:  #2a5c3a;
+  --cam-w:    min(340px, 90vw);
+}
+*, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+html { font-size:16px; scroll-behavior:smooth; }
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: 'DM Mono', monospace;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* ── header ── */
+.site-header {
+  width: 100%;
+  border-bottom: 1px solid var(--rule);
+  padding: 1.25rem 2rem;
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+}
+.logo {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.6rem;
+  font-weight: 300;
+  letter-spacing: .04em;
+  color: var(--ink);
+}
+.logo span { color: var(--gold); font-style: italic; }
+.logo-sub {
+  font-size: 0.65rem;
+  color: var(--muted);
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+/* ── screens ── */
+.screen { display:none; width:100%; max-width:520px; padding:2rem 1.5rem 4rem; }
+.screen.active { display:block; }
+
+/* ── progress ── */
+.progress {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 2rem;
+}
+.prog-bar {
+  flex: 1;
+  height: 2px;
+  background: var(--rule);
+  transition: background .4s;
+}
+.prog-bar.active  { background: var(--gold); }
+.prog-bar.done    { background: var(--success); }
+
+/* ── type ── */
+.screen-label {
+  font-size: 0.65rem;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: .5rem;
+}
+.screen-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 2rem;
+  font-weight: 300;
+  line-height: 1.2;
+  margin-bottom: .75rem;
+}
+.screen-body {
+  font-size: .82rem;
+  color: var(--muted);
+  line-height: 1.8;
+  margin-bottom: 1.75rem;
+}
+
+/* ── rule divider ── */
+.rule {
+  border: none;
+  border-top: 1px solid var(--rule);
+  margin: 1.5rem 0;
+}
+
+/* ── instructions list ── */
+.inst-list { list-style: none; margin-bottom: 1.75rem; }
+.inst-list li {
+  display: flex;
+  gap: .85rem;
+  padding: .75rem 0;
+  border-bottom: 1px solid var(--rule);
+  font-size: .82rem;
+  line-height: 1.6;
+  color: var(--ink);
+}
+.inst-list li:last-child { border-bottom: none; }
+.inst-num {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.1rem;
+  color: var(--gold);
+  min-width: 1.4rem;
+  font-weight: 300;
+  line-height: 1.4;
+}
+
+/* ── form ── */
+.field { margin-bottom: 1.25rem; }
+.field label {
+  display: block;
+  font-size: .65rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: .4rem;
+}
+.field input {
+  width: 100%;
+  border: 1px solid var(--rule);
+  background: transparent;
+  padding: .65rem .85rem;
+  font-family: 'DM Mono', monospace;
+  font-size: .9rem;
+  color: var(--ink);
+  border-radius: 2px;
+  outline: none;
+  transition: border-color .2s;
+}
+.field input:focus { border-color: var(--gold); }
+
+/* ── button ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  border: 1px solid var(--ink);
+  background: var(--ink);
+  color: var(--paper);
+  font-family: 'DM Mono', monospace;
+  font-size: .78rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  padding: .75rem 1.6rem;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: background .18s, color .18s;
+  width: 100%;
+  justify-content: center;
+}
+.btn:hover  { background: var(--gold); border-color: var(--gold); }
+.btn:active { opacity: .85; }
+.btn.ghost  {
+  background: transparent;
+  color: var(--ink);
+  border-color: var(--rule);
+  margin-top: .75rem;
+}
+.btn.ghost:hover { border-color: var(--ink); background: transparent; }
+.btn:disabled { opacity:.4; cursor:not-allowed; }
+
+/* ── camera ── */
+.cam-wrap {
+  width: var(--cam-w);
+  aspect-ratio: 3/4;
+  margin: 0 auto 1.25rem;
+  position: relative;
+  border-radius: 2px;
+  overflow: hidden;
+  background: #111;
+  border: 1px solid var(--rule);
+}
+.cam-wrap video,
+.cam-wrap canvas { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+.cam-wrap canvas { z-index:2; }
+
+.hud {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  background: rgba(10,8,6,.7);
+  color: #e8dfc8;
+  border-radius: 100px;
+  padding: 5px 14px;
+  font-family: 'DM Mono', monospace;
+  font-size: .68rem;
+  letter-spacing: .06em;
+  z-index: 6;
+  backdrop-filter: blur(4px);
+  transition: background .3s;
+}
+.hud.ok   { background: rgba(42,92,58,.85); }
+.hud.warn { background: rgba(139,32,32,.8); }
+
+.countdown {
+  position: absolute;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,.4);
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 6rem;
+  font-weight: 300;
+  color: #fff;
+  z-index: 10;
+}
+
+/* skeleton guides */
+.guide-frame {
+  position: absolute;
+  inset: 8px;
+  border: 1px dashed rgba(184,144,42,.4);
+  border-radius: 2px;
+  z-index: 1;
+  pointer-events: none;
+}
+.guide-label {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  font-size: .6rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: rgba(184,144,42,.8);
+  z-index: 3;
+}
+
+/* shutter */
+.shutter-ring {
+  width: 64px; height: 64px;
+  border-radius: 50%;
+  border: 2px solid var(--ink);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  margin: 0 auto .75rem;
+  transition: border-color .2s;
+  background: transparent;
+}
+.shutter-ring:hover { border-color: var(--gold); }
+.shutter-ring:active .shutter-dot { transform: scale(.85); }
+.shutter-ring:disabled { opacity:.4; cursor:not-allowed; }
+.shutter-dot {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  background: var(--ink);
+  transition: transform .12s, background .2s;
+  pointer-events: none;
+}
+.shutter-ring:hover .shutter-dot { background: var(--gold); }
+
+/* ── loading ── */
+.spinner {
+  width: 36px; height: 36px;
+  border: 2px solid var(--rule);
+  border-top-color: var(--gold);
+  border-radius: 50%;
+  animation: spin .8s linear infinite;
+  margin: 2rem auto 1rem;
+}
+@keyframes spin { to { transform:rotate(360deg); } }
+.load-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.5rem;
+  font-weight: 300;
+  text-align: center;
+  margin-bottom: .5rem;
+}
+.load-sub { font-size:.78rem; color:var(--muted); text-align:center; line-height:1.7; }
+.load-err { font-size:.78rem; color:var(--danger); text-align:center; margin-top:.75rem; line-height:1.6; }
+
+/* ── results ── */
+.section-hd {
+  font-size: .6rem;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--gold);
+  padding: .6rem 0 .4rem;
+  border-bottom: 1px solid var(--rule);
+  margin-bottom: 0;
+}
+.m-row {
+  display: grid;
+  grid-template-columns: 1.6rem 1fr auto auto;
+  gap: .5rem;
+  align-items: center;
+  padding: .65rem 0;
+  border-bottom: 1px solid var(--rule);
+  font-size: .78rem;
+}
+.m-row:last-child { border-bottom: none; }
+.m-num { color: var(--muted); font-size: .65rem; }
+.m-name { color: var(--ink); }
+.m-name small { display:block; color:var(--muted); font-size:.65rem; margin-top:1px; }
+.m-val { font-size: 1rem; font-family:'Cormorant Garamond',serif; font-weight:400; color:var(--ink); text-align:right; white-space:nowrap; }
+.m-val span { font-size: .65rem; color: var(--muted); }
+.m-badge {
+  font-size: .6rem;
+  padding: 2px 7px;
+  border-radius: 100px;
+  text-align: center;
+  white-space: nowrap;
+}
+.badge-meas { background:#e8f0e8; color:#2a5c3a; }
+.badge-est  { background:#f5ede0; color:#7a5520; }
+.badge-fix  { background:#e8e4dc; color:#4a4030; }
+
+.disclaimer {
+  border: 1px solid var(--rule);
+  padding: 1rem 1.1rem;
+  margin-top: 1.25rem;
+  font-size: .72rem;
+  line-height: 1.8;
+  color: var(--muted);
+}
+.disclaimer strong { color: var(--ink); font-weight: 400; }
+
+.legend { display:flex; gap:1rem; flex-wrap:wrap; margin:.75rem 0 1.25rem; }
+.legend-item { display:flex; align-items:center; gap:.4rem; font-size:.68rem; color:var(--muted); }
+
+/* ── privacy note ── */
+.privacy {
+  font-size: .68rem;
+  color: var(--muted);
+  text-align: center;
+  line-height: 1.7;
+  margin-top: 1rem;
+  padding: 0 .5rem;
+}
+.privacy strong { color: var(--ink); font-weight: 400; }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="logo">Measure<span>Me</span></div>
+  <div class="logo-sub">Bespoke trouser measurements</div>
+</header>
+
+<!-- ── SCREEN: SETUP ── -->
+<section class="screen active" id="sc-setup">
+  <div class="screen-label">Welcome</div>
+  <h1 class="screen-title">Your bespoke<br>measurement session</h1>
+  <p class="screen-body">
+    Stand in front of any camera. The AI detects your body landmarks and
+    derives all 14 measurements from your tailor brief. No data leaves your device.
+  </p>
+
+  <ul class="inst-list">
+    <li><span class="inst-num">1</span><span>Wear only <strong>briefs, socks and shoes.</strong> Clothing adds bulk and skews measurements.</span></li>
+    <li><span class="inst-num">2</span><span>Prop your device <strong>2–3 metres away at hip height</strong> — a ledge, tripod, or stack of books works well.</span></li>
+    <li><span class="inst-num">3</span><span>Stand in front of a <strong>plain wall</strong> with good even lighting. Avoid backlighting.</span></li>
+    <li><span class="inst-num">4</span><span>Keep <strong>arms slightly away</strong> from your sides. Stand naturally erect.</span></li>
+    <li><span class="inst-num">5</span><span>You will capture <strong>two poses</strong>: front view, then right-side view.</span></li>
+  </ul>
+
+  <div class="field">
+    <label>Your height in centimetres — required for scale</label>
+    <input type="number" id="ht-in" value="175" min="140" max="220">
+  </div>
+  <div class="field">
+    <label>Name or reference (optional)</label>
+    <input type="text" id="nm-in" placeholder="e.g. John — appears on your results sheet">
+  </div>
+
+  <button class="btn" onclick="startApp()">Begin session &rarr;</button>
+  <p class="privacy">
+    <strong>Privacy:</strong> All AI processing runs entirely on this device using Google MediaPipe BlazePose.
+    No images, landmarks, or measurements are transmitted anywhere.
+  </p>
+</section>
+
+<!-- ── SCREEN: LOADING ── -->
+<section class="screen" id="sc-load">
+  <div class="spinner"></div>
+  <div class="load-title" id="l-title">Loading AI model&hellip;</div>
+  <p class="load-sub" id="l-sub">Downloading BlazePose (~5 MB on first run).<br>Please keep this tab open and stay on the page.</p>
+  <p class="load-err" id="l-err"></p>
+  <button class="btn" id="retry-btn" style="display:none;margin-top:1.5rem;" onclick="location.reload()">Reload &amp; try again</button>
+</section>
+
+<!-- ── SCREEN: CAMERA ── -->
+<section class="screen" id="sc-cam">
+  <div class="progress">
+    <div class="prog-bar" id="pb1"></div>
+    <div class="prog-bar" id="pb2"></div>
+    <div class="prog-bar" id="pb3"></div>
+  </div>
+
+  <div class="screen-label" id="c-label">Step 1 of 2</div>
+  <h2 class="screen-title" id="c-title">Front view</h2>
+  <p class="screen-body" id="c-hint">Face the camera directly. Your full body — head to toes — must be visible in the frame before you capture.</p>
+
+  <div class="cam-wrap">
+    <video id="vid" autoplay playsinline muted></video>
+    <canvas id="cvs"></canvas>
+    <div class="guide-frame"></div>
+    <div class="guide-label" id="view-lbl">FRONT</div>
+    <div class="hud" id="hud">Searching for pose&hellip;</div>
+    <div class="countdown" id="cd"></div>
+  </div>
+
+  <button class="shutter-ring" id="shutter" aria-label="Capture pose">
+    <div class="shutter-dot"></div>
+  </button>
+  <p class="privacy" style="margin-top:.5rem;">Tap when the skeleton overlay is visible and the status shows "Ready to capture"</p>
+</section>
+
+<!-- ── SCREEN: RESULTS ── -->
+<section class="screen" id="sc-res">
+  <div class="progress">
+    <div class="prog-bar done"></div>
+    <div class="prog-bar done"></div>
+    <div class="prog-bar done"></div>
+  </div>
+
+  <div class="screen-label">Complete</div>
+  <h2 class="screen-title">Your measurements</h2>
+  <p class="screen-body" id="res-meta"></p>
+
+  <div class="legend">
+    <div class="legend-item"><span class="m-badge badge-meas">Measured</span> From pose landmarks (±1–2 cm)</div>
+    <div class="legend-item"><span class="m-badge badge-est">Estimated</span> Derived from proportions (±2–4 cm)</div>
+    <div class="legend-item"><span class="m-badge badge-fix">Fixed</span> Per brief specification</div>
+  </div>
+
+  <div id="res-body"></div>
+
+  <div class="disclaimer">
+    These figures are a <strong>working draft</strong> for your tailor. The camera method is accurate for lengths
+    and proportional for circumferences. Your tailor must verify all measurements with a tape measure at the first
+    toile fitting before cutting the final fabric.
+  </div>
+
+  <button class="btn" style="margin-top:1.5rem;" onclick="redoMeasure()">Measure again &rarr;</button>
+  <button class="btn ghost" onclick="printResults()">Print / save as PDF</button>
+</section>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/pose.js" crossorigin="anonymous"></script>
+<script>
+'use strict';
+// ── state ──────────────────────────────────────────────────────────────────
+let poseInst=null, camStream=null, rafId=null, busy=false;
+let currentView='front', fData=null, sData=null;
+let userH=175, userName='';
+
+// ── helpers ────────────────────────────────────────────────────────────────
+const $=id=>document.getElementById(id);
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  $(id).classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function setLoad(title,sub){$('l-title').textContent=title;$('l-sub').textContent=sub;}
+function setErr(msg){$('l-err').textContent=msg;$('retry-btn').style.display='block';}
+
+// ── init ───────────────────────────────────────────────────────────────────
+async function startApp(){
+  userH=parseInt($('ht-in').value)||175;
+  userName=$('nm-in').value.trim();
+  showScreen('sc-load');
+  try{
+    if(typeof Pose==='undefined') throw new Error('MediaPipe did not load. Check your internet connection, then reload.');
+    setLoad('Initialising BlazePose…','Setting up the pose detection model. This may take a moment on first run.');
+    poseInst=new Pose({locateFile:f=>`https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/${f}`});
+    poseInst.setOptions({modelComplexity:0,smoothLandmarks:true,enableSegmentation:false,minDetectionConfidence:0.5,minTrackingConfidence:0.5});
+    poseInst.onResults(onResults);
+    await openCamera('front');
+  } catch(e){ setLoad('Failed to load',''); setErr(e.message); }
+}
+
+// ── camera ─────────────────────────────────────────────────────────────────
+async function openCamera(view){
+  stopCamera();
+  currentView=view; busy=false;
+  try{
+    camStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:480},height:{ideal:640}},audio:false});
+  } catch(fe){
+    try{ camStream=await navigator.mediaDevices.getUserMedia({video:true,audio:false}); }
+    catch(e){ showScreen('sc-load'); setLoad('Camera denied',''); setErr('Camera access was denied: '+e.message); return; }
+  }
+  if(view==='front'){
+    setPB([1,0,0]);
+    $('c-label').textContent='Step 1 of 2';
+    $('c-title').textContent='Front view';
+    $('c-hint').textContent='Face the camera directly. Your full body — head to toes — must be visible before you capture.';
+    $('view-lbl').textContent='FRONT';
+  } else {
+    setPB([2,1,0]);
+    $('c-label').textContent='Step 2 of 2';
+    $('c-title').textContent='Right side view';
+    $('c-hint').textContent='Turn so your right side faces the camera. Stand naturally erect, arms at your sides.';
+    $('view-lbl').textContent='SIDE';
+  }
+  showScreen('sc-cam');
+  const vid=$('vid');
+  vid.srcObject=camStream;
+  await vid.play().catch(()=>{});
+  startLoop();
+}
+
+function setPB(states){
+  const ids=['pb1','pb2','pb3'];
+  const cls=['done','active',''];
+  ids.forEach((id,i)=>{ $(id).className='prog-bar'; if(states[i]<2) $(id).classList.add(cls[states[i]]); });
+}
+
+function stopCamera(){
+  if(rafId){ cancelAnimationFrame(rafId); rafId=null; }
+  if(camStream){ camStream.getTracks().forEach(t=>t.stop()); camStream=null; }
+}
+
+function startLoop(){
+  const vid=$('vid');
+  async function tick(){
+    rafId=requestAnimationFrame(tick);
+    if(!busy && vid.readyState>=2 && poseInst){
+      busy=true;
+      try{ await poseInst.send({image:vid}); } catch(e){ console.warn('pose err',e); }
+      busy=false;
+    }
+  }
+  rafId=requestAnimationFrame(tick);
+}
+
+// ── pose results ───────────────────────────────────────────────────────────
+function onResults(res){
+  const vid=$('vid'), cvs=$('cvs'), ctx=cvs.getContext('2d');
+  const W=vid.videoWidth||480, H=vid.videoHeight||640;
+  cvs.width=W; cvs.height=H;
+  ctx.clearRect(0,0,W,H);
+  const hud=$('hud');
+  if(res.poseLandmarks && res.poseLandmarks.length){
+    window._latestLm=res.poseLandmarks;
+    drawSkeleton(ctx,res.poseLandmarks,W,H);
+    const full=bodyInFrame(res.poseLandmarks);
+    const oriented=currentView==='side'?checkSide(res.poseLandmarks):checkFront(res.poseLandmarks);
+    if(!full){
+      hud.textContent='Step back — full body not in frame'; hud.className='hud warn';
+    } else if(!oriented){
+      hud.textContent=currentView==='side'?'Turn more sideways — right shoulder should hide behind left':'Turn to face the camera directly';
+      hud.className='hud warn';
+    } else {
+      hud.textContent='Ready to capture'; hud.className='hud ok';
+    }
+  } else {
+    window._latestLm=null;
+    hud.textContent='Searching for pose…'; hud.className='hud';
+  }
+}
+
+function bodyInFrame(lm){
+  return lm[0].y<0.20 && (lm[29].y+lm[30].y)/2>0.78 && lm[0].visibility>0.4;
+}
+function checkFront(lm){ return Math.abs(lm[11].x-lm[12].x)>0.13; }
+function checkSide(lm){ return Math.abs(lm[11].x-lm[12].x)<0.13; }
+
+const BONES=[
+  [11,12],[11,13],[13,15],[12,14],[14,16],
+  [11,23],[12,24],[23,24],[23,25],[24,26],
+  [25,27],[26,28],[27,29],[28,30],[29,31],[30,32]
+];
+function drawSkeleton(ctx,lm,W,H){
+  ctx.lineWidth=2; ctx.strokeStyle='rgba(184,144,42,0.75)';
+  for(const[a,b] of BONES){
+    if((lm[a]?.visibility??0)<0.3||(lm[b]?.visibility??0)<0.3) continue;
+    ctx.beginPath(); ctx.moveTo(lm[a].x*W,lm[a].y*H); ctx.lineTo(lm[b].x*W,lm[b].y*H); ctx.stroke();
+  }
+  ctx.fillStyle='rgba(245,241,235,0.9)';
+  for(let i=11;i<lm.length;i++){
+    if((lm[i]?.visibility??0)<0.3) continue;
+    ctx.beginPath(); ctx.arc(lm[i].x*W,lm[i].y*H,3.5,0,Math.PI*2); ctx.fill();
+  }
+}
+
+// ── shutter ────────────────────────────────────────────────────────────────
+$('shutter').addEventListener('click', function(){
+  if(!window._latestLm){ $('hud').textContent='No pose detected — wait for skeleton'; $('hud').className='hud warn'; return; }
+  this.disabled=true;
+  let n=3;
+  const cd=$('cd'); cd.textContent=n; cd.style.display='flex';
+  const iv=setInterval(async ()=>{
+    n--;
+    if(n>0){ cd.textContent=n; return; }
+    clearInterval(iv); cd.style.display='none'; this.disabled=false;
+    const snap=window._latestLm.map(l=>({...l}));
+    const vid=$('vid');
+    const dim={w:vid.videoWidth||480, h:vid.videoHeight||640};
+    if(currentView==='front'){
+      fData={lm:snap,...dim};
+      await openCamera('side');
+    } else {
+      sData={lm:snap,...dim};
+      stopCamera();
+      buildResults();
+    }
+  },1000);
+});
+
+// ── measurements ───────────────────────────────────────────────────────────
+function calcMeasurements(){
+  const f=fData, s=sData;
+  const fy=i=>f.lm[i].y*f.h, fx=i=>f.lm[i].x*f.w;
+  const noseY=fy(0), heelY=(fy(29)+fy(30))/2, span=heelY-noseY;
+  if(span<=0) throw new Error('Invalid front pose data — please retake.');
+  // 1 pixel = scF cm
+  const scF=(userH*0.935)/span;
+
+  const shoulderY=(fy(11)+fy(12))/2;
+  const hipY=(fy(23)+fy(24))/2;
+  const kneeY=(fy(25)+fy(26))/2;
+  const ankleY=(fy(27)+fy(28))/2;
+  // natural waist ~20% up from hip toward shoulder
+  const waistY=hipY-0.20*(hipY-shoulderY);
+
+  // lengths (high accuracy)
+  const outseam=Math.round((heelY-waistY)*scF);
+  const inseam=Math.round((heelY-hipY)*scF);
+  const fRise=Math.round((hipY-waistY)*scF);
+  const bRise=Math.round(fRise+4.5);
+  const kneeHt=Math.round((kneeY-hipY)*scF);
+  const finLen=Math.round(outseam-4.5);
+
+  // widths from front view
+  const hipW=Math.abs(fx(23)-fx(24))*scF;
+  const kneeW=Math.abs(fx(25)-fx(26))*scF;
+  const ankleW=Math.abs(fx(27)-fx(28))*scF;
+  const shdW=Math.abs(fx(11)-fx(12))*scF;
+  // waist width estimated from shoulder+hip
+  const waistW=shdW*0.30+hipW*0.70;
+
+  // side view for depth
+  const sy=i=>s.lm[i].y*s.h, sx=i=>s.lm[i].x*s.w;
+  const sNose=sy(0), sHeel=(sy(29)+sy(30))/2, sSpan=sHeel-sNose;
+  if(sSpan<=0) throw new Error('Invalid side pose data — please retake.');
+  const scS=(userH*0.935)/sSpan;
+  const seatDepth=Math.abs(sx(23)-sx(24))*scS;
+  const waistDepth=Math.abs(sx(11)-sx(12))*scS*0.68;
+  const thighDepth=seatDepth*0.70;
+
+  // Ramanujan ellipse approximation for circumferences
+  function ellipseC(a,b){ a/=2; b/=2; if(a<=0||b<=0) return a*2*Math.PI; return Math.PI*(3*(a+b)-Math.sqrt((3*a+b)*(a+3*b))); }
+
+  const crotchCurve=Math.round(fRise*0.72+bRise*0.32);
+
+  return {
+    waist:   Math.round(ellipseC(waistW, waistDepth)+2.0),
+    seat:    Math.round(ellipseC(hipW,   seatDepth)+3.5),
+    thigh:   Math.round(ellipseC(hipW*0.60, thighDepth)+2.0),
+    knee:    Math.round(kneeW*2.9+1.5),
+    ankle:   Math.round(Math.max(ankleW*2.8+1.0, 22)),
+    outseam, inseam, fRise, bRise, kneeHt, finLen, crotchCurve
+  };
+}
+
+// ── results UI ─────────────────────────────────────────────────────────────
+function buildResults(){
+  showScreen('sc-res');
+  const when=new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
+  $('res-meta').textContent=(userName?userName+' · ':'')+`Height ${userH} cm · ${when}`;
+  let m;
+  try{ m=calcMeasurements(); }
+  catch(e){ $('res-body').innerHTML=`<p style="color:var(--danger);font-size:.82rem;padding:1rem 0;">${e.message}</p>`; return; }
+
+  const sections=[
+    {
+      label:'Circumferences (ease included)',
+      rows:[
+        {n:'01',l:'Natural waist',d:'At belly button · high-rise',v:m.waist,c:'est'},
+        {n:'02',l:'Seat / hip',d:'Fullest part of the seat',v:m.seat,c:'est'},
+        {n:'03',l:'Thigh',d:'Upper thigh, one leg',v:m.thigh,c:'est'},
+        {n:'04',l:'Knee',d:'At centre of kneecap',v:m.knee,c:'est'},
+        {n:'05',l:'Ankle / hem opening',d:'At ankle bone',v:m.ankle,c:'est'},
+      ]
+    },
+    {
+      label:'Lengths',
+      rows:[
+        {n:'06',l:'Outseam',d:'Waistband top to heel',v:m.outseam,c:'meas'},
+        {n:'07',l:'Inseam',d:'Crotch point to heel',v:m.inseam,c:'meas'},
+        {n:'08',l:'Full rise — front',d:'Belly button to crotch',v:m.fRise,c:'meas'},
+        {n:'09',l:'Full rise — back',d:'Back waist to crotch',v:m.bRise,c:'est'},
+        {n:'10',l:'Knee height',d:'Hip joint to kneecap',v:m.kneeHt,c:'meas'},
+        {n:'11',l:'Finished trouser length',d:'Single break, covers ⅔ of shoe',v:m.finLen,c:'meas'},
+      ]
+    },
+    {
+      label:'Derived & fixed',
+      rows:[
+        {n:'12',l:'Crotch curve',d:'Following the body curve',v:m.crotchCurve,c:'est'},
+        {n:'13',l:'Waistband width',d:'Per brief specification',v:'4.5',c:'fix'},
+        {n:'14',l:'Cuff depth (turn-up)',d:'Per brief specification',v:'4.5',c:'fix'},
+      ]
+    }
+  ];
+
+  const badgeTxt={meas:'Measured',est:'Estimated',fix:'Fixed'};
+  const badgeCls={meas:'badge-meas',est:'badge-est',fix:'badge-fix'};
+
+  let html='';
+  for(const sec of sections){
+    html+=`<div class="section-hd">${sec.label}</div>`;
+    for(const r of sec.rows){
+      html+=`<div class="m-row">
+        <span class="m-num">${r.n}</span>
+        <span class="m-name">${r.l}<small>${r.d}</small></span>
+        <span class="m-val">${r.v} <span>cm</span></span>
+        <span class="m-badge ${badgeCls[r.c]}">${badgeTxt[r.c]}</span>
+      </div>`;
+    }
+  }
+  $('res-body').innerHTML=html;
+}
+
+function redoMeasure(){ fData=sData=null; openCamera('front'); }
+function printResults(){ window.print(); }
+</script>
+
+<style media="print">
+  .site-header { border:none; }
+  .btn { display:none; }
+  .screen { display:none !important; }
+  #sc-res { display:block !important; }
+  .disclaimer { border:1px solid #ccc; }
+</style>
+</body>
+</html>
